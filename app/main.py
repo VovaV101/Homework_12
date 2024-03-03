@@ -45,4 +45,4 @@ app.include_router(contacts.router, prefix="/api")
 app.include_router(auth.router, prefix="/api/auth")
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=9000, reload=True)
+    uvicorn.run("main:app", host="APP_HOST", port=9000, reload=True)

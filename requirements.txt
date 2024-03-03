@@ -1,0 +1,14 @@
+aiohttp~=3.9.3
+Faker~=23.3.0
+anyio~=4.3.0
+python-dotenv~=1.0.1
+fastapi~=0.109.2
+SQLAlchemy~=2.0.27
+pydantic~=2.6.1
+jose~=1.0.0
+passlib~=1.7.4
+cloudinary~=1.39.0
+redis~=5.1.0b4
+libgravatar~=1.0.4
+alembic~=1.13.1
+uvicorn~=0.27.1
