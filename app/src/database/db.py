@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import HTTPException, status
 from sqlalchemy import create_engine
+from ..conf.config import settings
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker
 
@@ -21,6 +22,8 @@ postgres_database = environ.get("POSTGRES_DATABASE")
 
 # Перевіряємо, чи всі необхідні змінні були визначені
 assert all([postgres_username, postgres_password, postgres_host, postgres_port, postgres_database]), "Some PostgreSQL environment variables are missing"
+
+URI = settings.sqlalchemy_database_url
 
 # Формуємо URL для підключення до бази даних
 SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://{postgres_username}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"
@@ -41,7 +44,3 @@ def get_db():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
     finally:
         db.close()
-
-
-if __name__ == "__main__":
-    print(engine)

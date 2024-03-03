@@ -1,4 +1,8 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field, EmailStr
+
+
 from ..database.models import Role
 
 
@@ -21,3 +25,8 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserDetailResponse(BaseModel):
+    detail: str
+    user: UserResponse

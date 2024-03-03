@@ -1,30 +1,33 @@
+import logging
 from sqlalchemy.orm import Session
 
-# from fastapi import Depends
 
+from ..conf.config import settings
 from ..database.models import User
-from ..services.auth.auth import Auth
+from ..services.auth.auth import auth_service
 from ..repository import users as repository_users
 
-# from src.database.db import get_db
+
+logger = logging.getLogger(f"{settings.app_name}.{__name__}")
 
 
-auth_service = Auth()
-
-
-async def a_get_current_user(token: str|None, db: Session) -> User | None:
+async def a_get_current_user(token: str | None, db: Session) -> User | None:
     if not token:
         return None
     email = auth_service.decode_jwt(token)
     if email is None:
         return None
-    user = await repository_users.get_user_by_email(email, db)
+    user = await repository_users.get_cache_user_by_email(email)
+    if user is None:
+        user = await repository_users.get_user_by_email(email, db)
+        if user:
+            await repository_users.update_cache_user(user)
+
     return user
 
 
 async def signup(body, db: Session):
     try:
-        user = await repository_users.get_user_by_name(body.username, db)
         user = await repository_users.get_user_by_name(body.username, db)
         if user is not None:
             return None
@@ -37,21 +40,19 @@ async def signup(body, db: Session):
     return new_user
 
 
-async def login(username: str, password: str, db: Session):
-    user = await repository_users.get_user_by_name(username, db)
+def login(user: User, password: str, db: Session):
     if user is None:
         return None
     if not auth_service.verify_password(password, user.password):
         return None
     # Generate JWT
-    access_token, expire_token = await auth_service.create_access_token(data={"sub": user.email})
+    expires_delta = 12*60*60 if settings.app_mode == 'dev' else None
+    access_token, expire_token = auth_service.create_access_token(data={"sub": user.email}, expires_delta=expires_delta)
     token = {"access_token": access_token, "token_type": "bearer", "expire_access_token": expire_token}
-    refresh_token, expire_token = await auth_service.create_refresh_token(data={"sub": user.email})
+    refresh_token, expire_token = auth_service.create_refresh_token(data={"sub": user.email})
     token.update({"refresh_token": refresh_token, "expire_refresh_token": expire_token})
     return token
 
 
 async def update_refresh_token(username: str, refresh_token: str, db: Session):
-    return await repository_users.update_by_name_refresh_token(
-        username, refresh_token, db
-    )
+    return await repository_users.update_by_name_refresh_token(username, refresh_token, db)
